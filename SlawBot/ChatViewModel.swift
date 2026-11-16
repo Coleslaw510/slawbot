@@ -4,11 +4,13 @@ import Combine
 @MainActor
 final class ChatViewModel: ObservableObject {
     @Published private(set) var messages: [ChatMessage] = []
+    @Published private(set) var pendingMessage: ChatMessage?
     @Published private(set) var isLoading = true
     @Published private(set) var isWaitingForReply = false
     @Published var errorMessage: String?
 
     private let conversationID: String
+    private var pendingMessageSentAt: Date?
     private var pollingTask: Task<Void, Never>?
 
     init(conversationID: String, isRunning: Bool = false) {
@@ -25,6 +27,11 @@ final class ChatViewModel: ObservableObject {
                updated.contains(where: { $0.isAssistant && !previousAssistantIDs.contains($0.id) }) {
                 isWaitingForReply = false
             }
+            if let pendingMessage, let sentAt = pendingMessageSentAt,
+               updated.contains(where: { matchesPending($0, pending: pendingMessage, sentAt: sentAt) }) {
+                self.pendingMessage = nil
+                pendingMessageSentAt = nil
+            }
             messages = updated
             isLoading = false
             errorMessage = nil
@@ -34,18 +41,32 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
-    func send(_ text: String, settings: AppSettings) async {
+    func send(_ text: String, settings: AppSettings) async -> Bool {
         let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleaned.isEmpty, !isWaitingForReply else { return }
+        guard !cleaned.isEmpty, !isWaitingForReply else { return false }
+
+        let sentAt = Date()
+        pendingMessageSentAt = sentAt
+        pendingMessage = ChatMessage(
+            id: "local-\(UUID().uuidString)",
+            role: "user",
+            text: cleaned,
+            timestamp: ISO8601DateFormatter().string(from: sentAt)
+        )
         isWaitingForReply = true
         errorMessage = nil
+
         do {
             let client = try settings.makeClient()
             try await client.sendMessage(conversationID: conversationID, text: cleaned)
             await refresh(settings: settings)
+            return true
         } catch {
             isWaitingForReply = false
+            pendingMessage = nil
+            pendingMessageSentAt = nil
             errorMessage = error.localizedDescription
+            return false
         }
     }
 
@@ -63,5 +84,13 @@ final class ChatViewModel: ObservableObject {
     func stopPolling() {
         pollingTask?.cancel()
         pollingTask = nil
+    }
+
+    private func matchesPending(_ message: ChatMessage, pending: ChatMessage, sentAt: Date) -> Bool {
+        guard message.isUser, message.text == pending.text, let timestamp = message.timestamp else { return false }
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let date = fractional.date(from: timestamp) ?? ISO8601DateFormatter().date(from: timestamp)
+        return date.map { $0 >= sentAt.addingTimeInterval(-10) } ?? false
     }
 }

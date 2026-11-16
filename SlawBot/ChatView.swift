@@ -40,6 +40,10 @@ struct ChatView: View {
                             ChatBubble(message: message)
                                 .id(message.id)
                         }
+                        if let pendingMessage = model.pendingMessage {
+                            ChatBubble(message: pendingMessage)
+                                .id(pendingMessage.id)
+                        }
 
                         if model.isWaitingForReply {
                             workingIndicator.id("working-indicator")
@@ -53,6 +57,9 @@ struct ChatView: View {
                 .scrollDismissesKeyboard(.interactively)
                 .onChange(of: model.messages.count) { _, _ in
                     withAnimation(.easeOut(duration: 0.24)) { proxy.scrollTo("chat-bottom", anchor: .bottom) }
+                }
+                .onChange(of: model.pendingMessage?.id) { _, messageID in
+                    if messageID != nil { withAnimation(.easeOut(duration: 0.24)) { proxy.scrollTo("chat-bottom", anchor: .bottom) } }
                 }
                 .onChange(of: model.isWaitingForReply) { _, waiting in
                     if waiting { withAnimation(.easeOut(duration: 0.24)) { proxy.scrollTo("chat-bottom", anchor: .bottom) } }
@@ -124,6 +131,7 @@ struct ChatView: View {
                 .foregroundStyle(SlawPalette.text)
                 .tint(SlawPalette.mint)
                 .lineLimit(1...5)
+                .fixedSize(horizontal: false, vertical: true)
                 .focused($composerFocused)
                 .textInputAutocapitalization(.sentences)
                 .submitLabel(.send)
@@ -157,9 +165,11 @@ struct ChatView: View {
     private func sendDraft() {
         let message = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !message.isEmpty, !model.isWaitingForReply else { return }
-        draft = ""
-        composerFocused = false
-        Task { await model.send(message, settings: settings) }
+        Task {
+            if await model.send(message, settings: settings) {
+                draft = ""
+            }
+        }
     }
 
     private func errorBanner(_ message: String) -> some View {

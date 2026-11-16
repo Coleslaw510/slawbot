@@ -71,7 +71,11 @@ struct OpenHandsAPIClient {
             content: [MessageContentPayload(type: "text", text: text)],
             run: true
         )
-        let _: SendMessageResponse = try await post("api/v1/app-conversations/\(conversationID)/send-message", body: payload)
+        let response: SendMessageResponse = try await post("api/v1/app-conversations/\(conversationID)/send-message", body: payload)
+        guard response.success else {
+            let status = response.sandboxStatus ?? "unknown"
+            throw APIError.messageNotAccepted(response.message ?? "OpenHands did not accept the message (sandbox status: \(status)).")
+        }
     }
 
     func fetchMessages(conversationID: String) async throws -> [ChatMessage] {
@@ -161,6 +165,7 @@ private struct MessageContentPayload: Encodable {
 private struct SendMessageResponse: Decodable {
     let success: Bool
     let sandboxStatus: String?
+    let message: String?
 }
 
 private final class RedirectBlocker: NSObject, URLSessionTaskDelegate {
@@ -176,6 +181,7 @@ enum APIError: LocalizedError {
     case unreadableResponse
     case httpStatus(Int)
     case transport(String)
+    case messageNotAccepted(String)
     case startTaskFailed(String)
     case startTaskTimedOut
 
@@ -193,6 +199,8 @@ enum APIError: LocalizedError {
             return "OpenHands returned HTTP \(code). Check the server URL and optional access token."
         case .transport(let message):
             return "Could not reach OpenHands: \(message)"
+        case .messageNotAccepted(let detail):
+            return detail
         case .startTaskFailed(let detail):
             return detail.isEmpty ? "OpenHands could not start the conversation." : detail
         case .startTaskTimedOut:
