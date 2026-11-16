@@ -39,3 +39,5 @@ An unsigned IPA is not installable directly by iOS. Use your signing service to 
 - The client rejects redirects and sends an optional `X-Access-Token` only to OpenHands API routes.
 - The app itself has no telemetry or server-side proxy. OpenHands may forward prompts to its configured model provider.
 - Never commit an access token, signing certificate, provisioning profile, or private key.
+
+The interface uses a bright light palette with stable, colorful, context-aware icons for conversations and fills the iPhone canvas while respecting the status-bar and home-indicator safe areas.

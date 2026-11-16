@@ -59,6 +59,7 @@ struct ChatView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(SlawPalette.background.ignoresSafeArea())
         .safeAreaInset(edge: .bottom, spacing: 0) { composer }
         .toolbar(.hidden, for: .navigationBar)
@@ -146,7 +147,7 @@ struct ChatView: View {
         .padding(.horizontal, 13)
         .padding(.top, 10)
         .padding(.bottom, 8)
-        .background(.ultraThinMaterial)
+        .background(SlawPalette.background.opacity(0.97).ignoresSafeArea(edges: .bottom))
     }
 
     private var canSend: Bool {

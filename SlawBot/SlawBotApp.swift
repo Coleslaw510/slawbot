@@ -8,7 +8,7 @@ struct SlawBotApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(settings)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(.light)
         }
     }
 }

@@ -1,16 +1,16 @@
 import SwiftUI
 
 enum SlawPalette {
-    static let background = Color(hex: 0x090D0C)
-    static let surface = Color(hex: 0x141A18)
-    static let elevated = Color(hex: 0x1B2320)
-    static let outline = Color(hex: 0x2A3530)
-    static let mint = Color(hex: 0x8FE0B7)
-    static let mintDeep = Color(hex: 0x4FB889)
-    static let text = Color(hex: 0xF2F7F4)
-    static let muted = Color(hex: 0x9CAAA3)
-    static let warning = Color(hex: 0xF1B96A)
-    static let danger = Color(hex: 0xFF7F78)
+    static let background = Color(hex: 0xF5F7F8)
+    static let surface = Color(hex: 0xFFFFFF)
+    static let elevated = Color(hex: 0xEEF2F4)
+    static let outline = Color(hex: 0xDDE5E1)
+    static let mint = Color(hex: 0x167A53)
+    static let mintDeep = Color(hex: 0x0D6645)
+    static let text = Color(hex: 0x18231F)
+    static let muted = Color(hex: 0x596A62)
+    static let warning = Color(hex: 0x9A5B00)
+    static let danger = Color(hex: 0xB23C35)
 }
 
 extension Color {
@@ -42,6 +42,48 @@ struct SlawMark: View {
                 .offset(x: size * 0.27, y: -size * 0.27)
         }
         .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
+}
+
+struct ConversationArtwork: View {
+    let conversation: ConversationSummary
+
+    private static let colors: [Color] = [
+        Color(hex: 0x6A56C7), Color(hex: 0xD45D46), Color(hex: 0x2388B2),
+        Color(hex: 0xBD4F8F), Color(hex: 0xB87713), Color(hex: 0x178465),
+        Color(hex: 0x4A67C4)
+    ]
+
+    private var color: Color {
+        let seed = conversation.id.utf8.reduce(0) { ($0 &* 31 &+ Int($1)) & 0x7FFFFFFF }
+        return Self.colors[seed % Self.colors.count]
+    }
+
+    private var symbol: String {
+        let value = (conversation.displayTitle + " " + (conversation.repositoryLabel ?? "")).lowercased()
+        if value.contains("design") || value.contains("ui") || value.contains("brand") { return "paintpalette.fill" }
+        if value.contains("web") || value.contains("site") || value.contains("website") { return "globe" }
+        if value.contains("data") || value.contains("chart") || value.contains("analytics") { return "chart.bar.fill" }
+        if value.contains("bug") || value.contains("fix") || value.contains("debug") { return "ladybug.fill" }
+        if value.contains("game") { return "gamecontroller.fill" }
+        if value.contains("doc") || value.contains("readme") || value.contains("writing") { return "doc.text.fill" }
+        if value.contains("photo") || value.contains("image") || value.contains("art") { return "photo.fill" }
+        if value.contains("server") || value.contains("api") || value.contains("deploy") { return "server.rack" }
+        return "terminal.fill"
+    }
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(color.opacity(0.13))
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(color.opacity(0.20), lineWidth: 1)
+            Image(systemName: symbol)
+                .font(.system(size: 19, weight: .semibold))
+                .foregroundStyle(color)
+        }
+        .frame(width: 50, height: 50)
         .accessibilityHidden(true)
     }
 }

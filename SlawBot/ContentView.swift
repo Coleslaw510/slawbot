@@ -30,11 +30,13 @@ struct ContentView: View {
                         }
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, 14)
-                    .padding(.bottom, 28)
+                    .padding(.top, 6)
+                    .padding(.bottom, 16)
                 }
                 .refreshable { await model.load(settings: settings) }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(SlawPalette.background.ignoresSafeArea())
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if settings.isConfigured {
                     newConversationButton
@@ -57,6 +59,8 @@ struct ContentView: View {
                 await model.load(settings: settings)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(SlawPalette.background.ignoresSafeArea())
         .tint(SlawPalette.mint)
     }
 
@@ -130,7 +134,7 @@ struct ContentView: View {
                 .foregroundStyle(SlawPalette.muted)
         }
         .frame(maxWidth: .infinity, alignment: .center)
-        .padding(.top, 48)
+        .padding(.top, 22)
     }
 
     private var emptyState: some View {
@@ -152,7 +156,7 @@ struct ContentView: View {
                 .frame(maxWidth: 310)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 54)
+        .padding(.top, 26)
     }
 
     private var conversationList: some View {
@@ -234,15 +238,15 @@ struct ContentView: View {
                     .tracking(1.5)
                     .opacity(0.72)
             }
-            .foregroundStyle(SlawPalette.background)
+            .foregroundStyle(Color.white)
             .padding(.horizontal, 18)
             .frame(height: 56)
-            .background(LinearGradient(colors: [SlawPalette.mint, Color(hex: 0xB5F0D0)], startPoint: .leading, endPoint: .trailing), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .background(LinearGradient(colors: [SlawPalette.mint, SlawPalette.mintDeep], startPoint: .leading, endPoint: .trailing), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .padding(.horizontal, 20)
         .padding(.top, 12)
         .padding(.bottom, 8)
-        .background(.ultraThinMaterial)
+        .background(SlawPalette.background.opacity(0.97).ignoresSafeArea(edges: .bottom))
     }
 }
 
@@ -261,13 +265,7 @@ private struct ConversationCard: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 15, style: .continuous).fill(SlawPalette.elevated)
-                Image(systemName: "terminal.fill")
-                    .font(.system(size: 17, weight: .medium))
-                    .foregroundStyle(SlawPalette.mint)
-            }
-            .frame(width: 48, height: 48)
+            ConversationArtwork(conversation: conversation)
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(conversation.displayTitle)
