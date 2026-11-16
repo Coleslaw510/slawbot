@@ -1,0 +1,19 @@
+# Xcode-generated files
+*.xcodeproj/
+*.xcworkspace/
+DerivedData/
+build/
+
+# Build artifacts
+*.ipa
+*.app/
+
+# Local macOS files
+.DS_Store
+
+# Local configuration and credentials
+.env
+.env.*
+*.mobileprovision
+*.p12
+*.pem
